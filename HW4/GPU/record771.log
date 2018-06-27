@@ -1,0 +1,39 @@
+result	10.75458
+
+index	loss			mse					val_loss		val_mse	
+1		11.731838158956	3329.077200966789	10.745000017131	2787.593257972929
+2		10.957400562366	3170.789294348823	10.713533339236	2609.699082572372
+3		10.288005100924	2993.190973350737	10.949635385584	2570.990532666665
+4		9.518760986461	2731.569317042260	11.403999473872	2547.912484880730
+5		8.683686266627	2358.052310902353	11.099421405792	2647.891796067909
+6		7.867458819208	1871.097804610691	11.309993282954	2626.232214281294
+7		7.079057978921	1456.573184063132	11.308634482490	2679.532400090606
+8		6.405670460680	1191.413911198813	11.204961689313	2623.673524757668
+9		5.965858483693	1034.422259871733	11.340687927935	2656.862478323336
+10		5.535087327494	847.124389454486	11.656201880066	2637.240333433504
+
+max_length=300
+min_count=2, size=270, iter=10, sg=1, workers=10
+
+inputs = Input(shape=(max_length,))
+model = Embedding(name="embedding", input_dim=len(word_index)+1, output_dim=word2Vec.vector_size, weights=[embedding_matrix], input_length=max_length)(inputs)
+good = Conv1D(name="conv1D_good", filters=64, kernel_size=6, kernel_initializer=initializers.glorot_uniform(seed=1))(model)
+good = BatchNormalization(name="batchNormalization_good", epsilon=.000001, momentum=.5)(good)
+good = MaxPooling1D(name="maxPooling1D_good", pool_size=3, strides=1)(good)
+bad = Conv1D(name="conv1D_bad", filters=64, kernel_size=6, kernel_initializer=initializers.glorot_uniform(seed=1))(model)
+bad = BatchNormalization(name="batchNormalization_bad", epsilon=.000001, momentum=.5)(bad)
+bad = Lambda(name="lambda_bad", function=lambda x: -x)(bad)
+bad = MaxPooling1D(name="maxPooling1D_bad", pool_size=3, strides=1)(bad)
+model = concatenate(name="good_merge", inputs=[good, bad], axis=1)
+model = Flatten(name="flatten")(model)
+model = Dense(name="dense_1", output_dim=128, kernel_initializer=initializers.glorot_uniform(seed=1), activation='relu')(model)
+model = Dense(name="dense_2", output_dim=64, kernel_initializer=initializers.glorot_uniform(seed=1), activation='relu')(model)
+model = Dense(name="dense_3", output_dim=32, kernel_initializer=initializers.glorot_uniform(seed=1), activation='relu')(model)
+model = Dense(name="output", output_dim=2, kernel_initializer=initializers.glorot_uniform(seed=1), activation='relu')(model)
+model = Model(inputs=inputs, outputs=model)
+model.compile(loss='mae', optimizer=optimizers.Adam(lr=.001), metrics=['mse'])
+model.summary()
+
+epochs = 10
+callback = model.fit(x=train_x, y=train_y, epochs=epochs, validation_split=.3, batch_size=20, verbose=1).history
+
