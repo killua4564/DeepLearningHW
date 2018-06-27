@@ -1,0 +1,26 @@
+result	0.63500
+
+index	loss			acc				val_loss		val_acc
+1		1.493049932851	0.540476190665	4.402846848523	0.000000000000
+2		0.652135957328	0.779047615944	5.165677158921	0.000000000000
+3		0.451719401375	0.857936507180	5.251008987427	0.000000000000
+4		0.332713177989	0.900952381747	5.503529619288	0.000000000000
+5		0.426142170552	0.876825397923	5.507692443000	0.000000000000
+6		0.214324224445	0.942063494334	5.673183070289	0.000000000000
+7		0.161593164657	0.959523811227	5.961084065614	0.000000000000
+8		0.205331653297	0.946190476418	5.801142180407	0.000000000000
+9		0.283952380397	0.916190482321	5.621030524925	0.000000000000
+10		0.119985489855	0.970952386894	6.023111361044	0.000000000000
+
+max_length = 1000
+min_count=2, size=270, iter=10, sg=1, workers=10
+
+Embedding(input_dim=len(word_index)+1, output_dim=vector_size, weights=[embedding_matrix], input_length=max_length)
+LSTM(units=200, kernel_initializer=initializers.glorot_uniform(seed=1), activation='tanh', return_sequences=True, recurrent_activation='hard_sigmoid', unroll=True)
+GRU(units=120, kernel_initializer=initializers.glorot_uniform(seed=1), activation='relu', return_sequences=True, recurrent_activation='hard_sigmoid', unroll=True)
+SimpleRNN(units=60, kernel_initializer=initializers.glorot_uniform(seed=1), activation='tanh', return_sequences=False, unroll=True)
+Dense(units=10, kernel_initializer=initializers.glorot_uniform(seed=1), activation='softmax')
+
+optimizer=optimizers.Adam(lr=.000252521000)
+
+

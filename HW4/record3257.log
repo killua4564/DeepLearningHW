@@ -1,0 +1,42 @@
+result	10.76750
+
+index	loss			mse					val_loss		val_mse
+1		11.760788387722	3203.336886935764	11.283534897698	3347.495090060764
+2		11.186016577261	3088.076574254919	11.033960342407	3251.636230468750
+3		10.822400128400	3023.037217881944	11.000172403124	3238.492743598090
+4		10.410869810316	2947.356739185474	11.044809977214	3152.582017686632
+5		9.815132741575	2840.353212709780	11.047956466675	3163.400268554688
+6		9.179905396921	2701.279012044271	11.231261465285	3102.944810655382
+7		8.499348481496	2509.125117549190	11.300453821818	3118.975911458333
+8		7.853493248975	2284.761908637153	11.430697441101	3058.361640082465
+9		7.380046014433	2025.056516294126	11.587903234694	3042.525553385417
+10		6.819171693590	1739.769411440249	11.262559254964	3095.836303710938
+11		6.163119651653	1421.637306495949	11.430003907945	3063.076022677951
+12		5.555235580162	1120.466452139395	11.737040095859	3021.041680230035
+13		5.165942227399	922.861276132089	11.372422006395	3090.438747829861
+14		4.877922905816	763.176418728299	11.477079603407	3066.328260633681
+15		4.563851647907	670.104613127532	11.578816201952	3074.676717122396
+
+max_length=300
+min_count=2, size=270, iter=10, sg=1, workers=10
+
+inputs = Input(shape=(max_length,))
+embedding = Embedding(name="embedding", input_dim=len(word_index)+1, output_dim=word2Vec.vector_size, weights=[embedding_matrix], input_length=max_length)(inputs)
+maxPooling1D = MaxPooling1D(name="maxPooling1D", pool_size=5, strides=3, padding='same')(embedding)
+conv1D_1 = Conv1D(name="conv1D_1", filters=64, kernel_size=1, strides=1, kernel_initializer=initializers.glorot_uniform(seed=1), padding='same', activation='relu')(maxPooling1D)
+conv1D_3 = Conv1D(name="conv1D_3", filters=64, kernel_size=3, strides=3, kernel_initializer=initializers.glorot_uniform(seed=1), padding='same', activation='relu')(embedding)
+conv1D_5 = Conv1D(name="conv1D_5", filters=64, kernel_size=5, strides=5, kernel_initializer=initializers.glorot_uniform(seed=1), padding='same', activation='relu')(embedding)
+concatenate = concatenate(name="concatenate", inputs=[conv1D_1, conv1D_3, conv1D_5], axis=1)
+averagePooling1D = AveragePooling1D(name="averagePooling1D", pool_size=5, strides=3)(concatenate)
+conv1D = Conv1D(name="conv1D", filters=128, kernel_size=3, strides=3, kernel_initializer=initializers.glorot_uniform(seed=1), padding='same', activation='relu')(averagePooling1D)
+flatten = Flatten(name="flatten")(conv1D)
+dense1 = Dense(name="dense1", output_dim=64, kernel_initializer=initializers.glorot_uniform(seed=1), activation='relu')(flatten)
+dense2 = Dense(name="dense2", output_dim=64, kernel_initializer=initializers.glorot_uniform(seed=1), activation='relu')(dense1)
+dropout = Dropout(name="dropout", rate=.25)(dense2)
+good_bad = Dense(output_dim=2, kernel_initializer=initializers.glorot_uniform(seed=1), activation='relu')(dropout)
+model = Model(inputs=inputs, outputs=good_bad)
+model.compile(loss='mae', optimizer=optimizers.Adam(lr=.001), metrics=['mse'])
+model.summary()
+
+epochs = 15
+callback = model.fit(x=train_x, y=train_y, epochs=epochs, validation_split=.25, batch_size=1000, verbose=1).history

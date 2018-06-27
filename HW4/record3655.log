@@ -1,0 +1,33 @@
+result	10.43791
+
+index	loss			mse					val_loss		val_mse
+1		11.762923051441	3238.863675556486	11.279686027103	3209.557097258391
+2		11.349237555549	3160.989316425626	11.136708277243	3174.308675130208
+3		11.132328699506	3121.683815607949	11.085339934738	3178.892331723814
+4		10.930681228638	3087.954647003658	11.008262492992	3103.852923357928
+5		10.640350848909	3035.076774476066	11.059795450281	3080.603694209346
+6		10.202752760478	2965.796262226408	11.109742005666	3098.320421006944
+7		9.745713593468	2849.884923541357	11.167301460549	3084.524355287905
+8		9.200592816822	2722.375451466394	11.268635785138	3083.995888038918
+9		8.666324184054	2553.773260207403	11.388035827213	3131.267598470052
+10		8.145352878268	2356.044044131324	11.367705292172	3274.019185384115
+
+max_length=300
+min_count=2, size=270, iter=10, sg=1, workers=10
+
+inputs = Input(shape=(max_length,))
+embedding = Embedding(name="embedding", input_dim=len(word_index)+1, output_dim=word2Vec.vector_size, weights=[embedding_matrix], input_length=max_length)(inputs)
+conv1D_1 = Conv1D(name="conv1D_1", filters=64, kernel_size=3, activation='relu')(embedding)
+conv1D_2 = Conv1D(name="conv1D_2", filters=64, kernel_size=3, activation='relu')(conv1D_1)
+maxPooling1D = MaxPooling1D(name="maxPooling1D", pool_size=3, strides=1)(conv1D_2)
+conv1D_3 = Conv1D(name="conv1D_3", filters=128, kernel_size=3, activation='relu')(maxPooling1D)
+conv1D_4 = Conv1D(name="conv1D_4", filters=128, kernel_size=3, activation='relu')(conv1D_3)
+globalAveragePooling1D = GlobalAveragePooling1D(name="globalAveragePooling1D")(conv1D_4)
+dropout = Dropout(name="dropout", rate=.5)(globalAveragePooling1D)
+outputs = Dense(name="output", output_dim=2, kernel_initializer=initializers.RandomUniform(minval=-1, maxval=1, seed=1), activation='relu')(dropout)
+model = Model(inputs=inputs, outputs=outputs)
+model.compile(loss='mae', optimizer=optimizers.Adam(lr=.001), metrics=['mse'])
+model.summary()
+
+epochs = 10
+callback = model.fit(x=train_x, y=train_y, epochs=epochs, validation_split=.3, batch_size=1000, verbose=1).history

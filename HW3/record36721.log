@@ -1,0 +1,36 @@
+result	0.61900
+
+index	loss			acc				val_loss		val_acc
+1		2.214706477476	0.353174604629	11.531627266495	0.000000000000
+2		1.060031557272	0.629206350304	12.148832179882	0.000000000000
+3		0.661688084380	0.767460318785	12.824471367730	0.000000000000
+4		0.529036232167	0.816190479483	12.884782360218	0.000000000000
+5		0.388085911541	0.870952379136	13.286434208905	0.000000000000
+6		0.289425256647	0.907619042056	13.966048049927	0.000000000000
+7		0.208584833163	0.936190468546	14.115330999869	0.000000000000
+8		0.156450512006	0.954920627579	13.963886974476	0.000000000000
+9		0.138146205564	0.955873008191	14.320365248786	0.000000000000
+10		0.101000699748	0.969841263408	14.778267648485	0.000000000000
+11		0.0782			0.9789			14.5884			0.0000
+12		0.0822			0.9776			14.6102			0.0000
+13		0.1013			0.9695			14.5818			0.0000
+14		0.0721			0.9762			14.9751			0.0000
+15		0.0603			0.9817			15.1525			0.0000
+16		0.0472			0.9879			14.8074			0.0000
+17		0.0363			0.9897			15.1860			0.0000
+18		0.0268			0.9924			15.0470			0.0000
+19		0.0269			0.9922			15.0207			0.0000
+20		0.0318			0.9911			15.3264			0.0000
+
+max_length = 600
+min_count=2, size=270, iter=10, sg=1, workers=10
+
+Embedding(input_dim=len(word_index)+1, output_dim=vector_size, weights=[embedding_matrix], input_length=max_length)
+LSTM(units=200, kernel_initializer=initializers.RandomUniform(minval=-1, maxval=1, seed=1), activation='tanh', return_sequences=True, recurrent_activation='hard_sigmoid', unroll=True)
+GRU(units=120, kernel_initializer=initializers.RandomUniform(minval=-1, maxval=1, seed=1), activation='relu', return_sequences=True, recurrent_activation='hard_sigmoid', unroll=True)
+SimpleRNN(units=60, kernel_initializer=initializers.RandomUniform(minval=-1, maxval=1, seed=1), activation='tanh', return_sequences=False, unroll=True)
+Dense(units=10, kernel_initializer=initializers.RandomUniform(minval=-1, maxval=1, seed=1), activation='softmax')
+
+optimizer=optimizers.Adam(lr=.0012626)
+
+model.fit(x=train_x, y=train_y, epochs=20, validation_split=.3, batch_size=20, verbose=1)

@@ -1,0 +1,35 @@
+result	10.57625
+
+index	loss			mse					val_loss		val_mse
+1		11.722895811475	3288.564501565600	10.972816114072	3030.137828685619
+2		11.195430585316	3173.210299052889	10.806293081354	2990.372959843388
+3		10.850510071194	3115.529865083240	10.746909097389	2964.018208821615
+4		10.405682382129	3042.374053955078	10.808590182552	2936.189205593533
+5		9.829571088155	2948.671510726686	10.897100969597	2928.903926142940
+6		9.227164665858	2822.912844703311	10.989728618551	2859.581597222222
+7		8.557677598227	2669.372369675409	11.015725012179	2847.414163094980
+8		7.958062274115	2456.268126472594	11.047999982481	2852.866884584780
+9		7.441271168845	2247.752174014137	11.216729764585	2814.358364529080
+10		6.860545877426	1963.746800498357	11.305095054485	2811.938885724103
+
+max_length=300
+min_count=2, size=270, iter=10, sg=1, workers=10
+
+inputs = Input(shape=(max_length,))
+embedding = Embedding(name="embedding", input_dim=len(word_index)+1, output_dim=word2Vec.vector_size, weights=[embedding_matrix], input_length=max_length)(inputs)
+conv1D_3 = Conv1D(name="conv1D_3", filters=128, kernel_size=3, strides=3, kernel_initializer=initializers.glorot_uniform(seed=1), padding='same', activation='relu')(embedding)
+maxPooling1D = MaxPooling1D(name="maxPooling1D", pool_size=3, strides=1, padding='same')(conv1D_3)
+conv1D_5 = Conv1D(name="conv1D_5", filters=128, kernel_size=5, strides=5, kernel_initializer=initializers.glorot_uniform(seed=1), padding='same', activation='relu')(embedding)
+averagePooling1D = AveragePooling1D(name="averagePooling1D", pool_size=5, strides=3)(conv1D_5)
+concatenate = concatenate(name="concatenate", inputs=[maxPooling1D, averagePooling1D], axis=1)
+conv1D = Conv1D(name="conv1D", filters=64, kernel_size=5, strides=5, kernel_initializer=initializers.glorot_uniform(seed=1), padding='same', activation='relu')(concatenate)
+flatten = Flatten(name="flatten")(conv1D)
+dense = Dense(name="dense", output_dim=64, kernel_initializer=initializers.glorot_uniform(seed=1), activation='relu')(flatten)
+dropout = Dropout(name="dropout", rate=.2)(dense)
+output = Dense(output_dim=2, kernel_initializer=initializers.glorot_uniform(seed=1), activation='relu')(dropout)
+model = Model(inputs=inputs, outputs=output)
+model.compile(loss='mae', optimizer=optimizers.Adam(lr=.001), metrics=['mse'])
+model.summary()
+
+epochs = 10
+callback = model.fit(x=train_x, y=train_y, epochs=epochs, validation_split=.3, batch_size=1000, verbose=1).history

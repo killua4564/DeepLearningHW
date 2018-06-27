@@ -1,0 +1,29 @@
+result	10.65500
+
+index	loss			mse					val_loss		val_mse
+1		11.658700178540	3334.425882006448	10.726800600688	2815.386763961227
+2		11.120304137941	3215.955068436880	10.584071512576	2792.843117042824
+3		10.755834889790	3163.176742311508	10.548947404932	2764.812065972222
+4		10.274023010617	3095.263574024988	10.734657958702	2716.109754774306
+5		9.770484568581	3018.726919022818	10.660047354522	2729.391190140336
+6		9.193140378074	2922.226973276290	10.682086096870	2742.218779387298
+7		8.739255704577	2803.591101752387	10.934681044685	2684.323371039497
+8		8.284488042196	2679.843065049913	10.750176005893	2719.606436270255
+9		7.876728723920	2557.455030653212	10.806023897948	2715.908745659722
+10		7.490100137771	2401.979116530646	11.088952117496	2666.664372196904
+
+max_length=300
+min_count=2, size=270, iter=10, sg=1, workers=10
+
+inputs = Input(shape=(max_length,))
+embedding = Embedding(name="embedding", input_dim=len(word_index)+1, output_dim=word2Vec.vector_size, weights=[embedding_matrix], input_length=max_length)(inputs)
+conv1D = Conv1D(name="conv1D", filters=100, kernel_initializer=initializers.glorot_uniform(seed=1), kernel_size=3, strides=1, padding="same", activation='relu')(embedding)
+flatten = Flatten(name="flatten")(conv1D)
+dense = Dense(name="dense", output_dim=64, kernel_initializer=initializers.glorot_uniform(seed=1), activation='relu')(flatten)
+outputs = Dense(name="output", output_dim=2, kernel_initializer=initializers.glorot_uniform(seed=1), activation='relu')(dense)
+model = Model(inputs=inputs, outputs=outputs)
+model.compile(loss='mae', optimizer=optimizers.Adam(lr=.001), metrics=['mse'])
+model.summary()
+
+epochs = 10
+callback = model.fit(x=train_x, y=train_y, epochs=epochs, validation_split=.3, batch_size=1000, verbose=1).history

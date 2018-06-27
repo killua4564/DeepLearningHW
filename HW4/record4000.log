@@ -1,0 +1,46 @@
+result	
+
+index	loss			good_loss		bad_loss		val_loss		val_good_loss	val_bad_loss
+1		27.238153805808	23.749270136394	3.488883640085	25.153205589012	22.847314728631	2.305890931023
+2		24.995991933913	22.849404668051	2.146587298030	25.150114271376	22.847314728631	2.302799503009
+3		24.995992055015	22.849404940529	2.146587299922	25.153990604259	22.847314728631	2.306675935233
+4		24.995992085290	22.849404652913	2.146587315060	25.156525435271	22.847314728631	2.309210733131
+5		24.995992115566	22.849404683189	2.146587315060	25.157965306883	22.847314728631	2.310650505401
+6		24.998125046019	22.849404774015	2.148720209561	25.215983320166	22.847314728631	2.368668584912
+7		24.995992024740	22.849404789153	2.146587301814	25.219681810450	22.847314728631	2.372367053120
+8		24.995991873363	22.849404637776	2.146587313168	25.216724537037	22.847314728631	2.369409757632
+9		24.995992130703	22.849404910254	2.146587302760	25.214378145006	22.847314728631	2.367063498055
+10		24.995991994464	22.849404879979	2.146587306545	25.212708861740	22.847314728631	2.365394214789
+
+max_length=300
+min_count=2, size=270, iter=10, sg=1, workers=10
+
+
+inputs = Input(shape=(max_length,))
+model = Embedding(name="embedding", input_dim=len(word_index)+1, output_dim=word2Vec.vector_size, weights=[embedding_matrix], input_length=max_length)(inputs)
+
+good = Conv1D(name="conv1D_good", filters=100, kernel_size=3)(model)
+good = BatchNormalization(name="batchNormalization_good")(good)
+good = MaxPooling1D(name="maxPooling1D_good", pool_size=3, strides=1)(good)
+good = Flatten(name="flatten_good")(good)
+good = Dense(name="dense_good_1", output_dim=64, kernel_initializer=initializers.RandomUniform(minval=-1, maxval=1, seed=1), activation="relu")(good)
+good = Dense(name="dense_good_2", output_dim=64, kernel_initializer=initializers.RandomUniform(minval=-1, maxval=1, seed=1), activation="relu")(good)
+good = Dropout(name="dropout_good", rate=.2)(good)
+good = Dense(name="good", output_dim=1, kernel_initializer=initializers.RandomUniform(minval=-1, maxval=1, seed=1), activation='relu')(good)
+
+bad = Conv1D(name="conv1D_bad", filters=100, kernel_size=3)(model)
+bad = BatchNormalization(name="batchNormalization_bad")(bad)
+bad = Lambda(name="lambda_bad", function=lambda x: -x)(bad)
+bad = MaxPooling1D(name="maxPooling1D_bad", pool_size=3, strides=1)(bad)
+bad = Flatten(name="flatten_bad")(bad)
+bad = Dense(name="dense_bad_1", output_dim=64, kernel_initializer=initializers.RandomUniform(minval=-1, maxval=1, seed=1), activation="relu")(bad)
+bad = Dense(name="dense_bad_2", output_dim=64, kernel_initializer=initializers.RandomUniform(minval=-1, maxval=1, seed=1), activation="relu")(bad)
+bad = Dropout(name="dropout_bad", rate=.2)(bad)
+bad = Dense(name="bad", output_dim=1, kernel_initializer=initializers.RandomUniform(minval=-1, maxval=1, seed=1), activation='relu')(bad)
+
+model = Model(inputs=inputs, outputs=[good, bad])
+model.compile(loss='mae', optimizer=optimizers.Adam(lr=.001), metrics=[])
+model.summary()
+
+epochs = 10
+callback = model.fit(x=train_x, y=[train_y_good, train_y_bad], epochs=epochs, validation_split=.3, batch_size=1000, verbose=1).history
